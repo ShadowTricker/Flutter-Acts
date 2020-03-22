@@ -27,7 +27,7 @@
 `4. 执行 Timer， 添加 Delay Timer 到下一次 EventQueue`  
 `5. 创建 ScheduleMicroTask 微任务， 添加 Micro Task 到下一次 MicroQueue`  
 `6. 输出 End`  
-此时，因为 **微任务总是优先执行**，所以最终第二次事件循环的对列为：  
+此时，因为 **微任务总是优先执行**，所以最终第二次事件循环的队列为：  
 `1. 输出 'Micro Task'`  
 `2. 输出 'Delay Future'`  
 `3. 输出 'Future'`  
