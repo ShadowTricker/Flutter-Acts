@@ -7,10 +7,13 @@
 [Future](./future.md)
 
 ## 3. FutureBuilder  
-[FutureBuilder](./future.md)
+[FutureBuilder](./future_builder.md)
 
-## 4. Stream & RxDart Extensions  
-[Stream & RxDart Extensions](./future.md)
+## 4. Stream  
+[Stream](./stream.md)
 
-## 5. SteamBuilder  
-[SteamBuilder](./future.md)
+## 5. RxDart  
+[RxDart](./rx_dart.md)
+
+## 6. SteamBuilder  
+[SteamBuilder](./stream_builder.md)
