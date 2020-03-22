@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_act/utils/shared_context.dart';
 
 class AsyncCatelogue extends StatelessWidget {
 

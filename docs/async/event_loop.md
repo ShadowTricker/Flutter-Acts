@@ -1,59 +1,75 @@
 # Event Loop（事件循环）  
-`Dart` 中的事件循环机制与 `Javasript` 中的基本一致。  
-每一次事件循环都是一个任务队列（`Task Queue`），每个任务队列由 宏任务（`MacroTask`）和 微任务（`MicroTask`）组成。  
-微任务常用的有两种 `Future`（JS 的 Promise） 和 `UI 更新`， 除却这两种以外的大部分任务都是宏任务。  
+`Dart` 中的事件循环机制原理与 `Javasript` 中的基本一致。  
+每一次事件循环都是一个任务队列（`Task Queue`），每个任务队列由 事件队列（`EventQueue`）和 微任务队列（`MicroQueue`）组成。  
+不同的是在两种语言中，宏任务和微任务的分类是不同的。  
+`Dart` 中的微任务通过 `scheduleMicroTask` 创建，而诸如 `Future` 等都归类于事件任务。
+> 在 `Javascript` 中，任务队列分为 宏任务（MacroTask）和 微任务（MicroTask）。  
+> 与 `Future` 概念类似的 `Promise` 是属于微任务的范畴，`Promise` 和 `UI更新` 在 Javascript 中是常见的微任务， 但在 Dart 中则不是。  
+
 执行的顺序是，每一次事件循环，**都先执行队列中的** `微任务`，当微任务完成时，执行`宏任务`。  
 例：  
 ```dart
+  void eventLoopSequenceSimple() {
     print('start');
-    final Future<String> testFuture = Future(() => 'Future');
-    Future.delayed(Duration(seconds: 0), () => print('Delay'));
+    Future.delayed(Duration(seconds: 0), () => print('Delay Future'));
+    final Future<void> testFuture = Future(() => print('Future'));
     testFuture.then(print);
+    Timer(Duration(seconds: 0), () => print('Delay Timer'));
+    scheduleMicrotask(() => print('Micro Task'));
     print('end');
+  }
 ```
 由上例分析：  
-第一次事件循环的队列为：  
-`1.输出Start(Macro)`，  `2.创建Future(Macro)`，  `3.创建延迟(Macro)`，  `4.输出End(Macro)`；  
-此时，Future 和 延迟 分别创建了一个微任务 和 宏任务，所以第二次事件循环的队列为：   
-`1.输出 Delay(Macro)`， `2.输出 Future(Micro)`；  
-但由于 **微任务总是先于宏任务执行**， 所以实际的情况是：  
-`1.输出 Future(Micro)`， `2.输出 Delay(Macro)`；  
-所以最终的表现结果为：  
-`start`， `end`， `Future`， `Delay`  
+第一次事件循环的队列为（第一次皆为EventTask）：  
+`1. 输出 Start`  
+`2. 执行 Future.delay，添加 Delay Future 到下一次事件循环`  
+`3. 创建 Future，添加 Future 到下一次事件循环`  
+`4. 执行 Timer， 添加 Delay Timer 到下一次事件循环`  
+`5. 创建 ScheduleMicroTask 微任务， 添加 Micro Task 到下一次事件循环`  
+`6. 输出 End`  
+此时，因为 **微任务总是优先执行**，所以最终第二次事件循环的对列为：  
+`1. 输出 'Micro Task'`  
+`2. 输出 'Delay Future'`  
+`3. 输出 'Future'`  
+`4. 输出 null`  
+`5. 输出 'Delay Timer'`  
 
-再来个复杂一点的例子：  
-```dart
-    print('start');
-    final Future<String> testFuture1 = Future(() => 'Future1');
-    final Future<String> testFuture2 = Future(() => 'Future2');
-    final Future<String> testFuture3 = Future(() => 'Future3');
-    final Future<String> testFuture4 = Future(() => 'Future4');
-    Future.delayed(Duration(seconds: 0), () => print('Delay1'));
-    testFuture1
-      .then((value) {
-        print(value);
-        return testFuture2;
-      })
-      .then((value) {
-        print(value);
-        return testFuture3;
-      })
-      .then((value) {
-        print(value);
-        Future.delayed(Duration(seconds: 0), () => print('Delay2'));
-        print('test');
-        return testFuture4;
-      })
-      .then(print);
-    print('end');
+所以最终的表现结果为：  
+`start`， `end`， `Micro Task`， `Delay Future`， `Future`， `null`， `Delay Timer`；  
+
+重点在输出 `Future` 之后， 执行了 `then` 方法输出了 `null` 而不是输出 `Delay Timer`， 这是与 `Javascript` 所区别的地方。  
+附 JS 代码：  
+```ts
+  function testAsync() {
+    console.log('start');
+    setTimeout(() => {
+      console.log('timer');
+    }, 0);
+    Promise.resolve().then(() => {
+      console.log('promise1-1');
+    }).then(value => {
+      console.log('promise1-2');
+    });
+
+    Promise.resolve().then(() => {
+      console.log('promise2-1');
+    }).then(value => {
+      console.log('promise2-2');
+    });
+
+    console.log('end');
+  }
+
+  /* output: */
+  // 'start'
+  // 'end'
+  // 'promise1-1'
+  // 'promise2-1'
+  // 'promise1-2'
+  // 'promise2-2'
+  // 'timer'
 ```
-第一次事件循环队列为（**第一次都是宏任务**）：  
-`start`， `创建Future1`， `创建Future2`， `创建Future3`， `创建Future4`， `创建 Delay1`，`执行testFuture1`， `end`  
-此时第二次事件循环的队列为（**除Delay1外，都是微任务**）：  
-`输出 Future1`， `输出 Future2`， `输出 Future3`， `创建 Delay2`， `输出 Future4`， `输出 Delay1(Macro)`，  
-由于在 Future 中创建了 Delay2， 所以第三次事件循环有一个单一的宏任务：  
-`输出 Delay2(Marco)`  
-所以最终结果是：  
-`start`, `end`, `Future1`, `Future2`, `Future3`, `test`, `Future4`, `Delay1`, `Delay2`
+
+
 
 ---

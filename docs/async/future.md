@@ -14,7 +14,7 @@ Future 有两种状态：`Completed`， `Uncompleted`。
     futureSuccess.then(print);
     futureSuccess.then(print);
 
-    // output
+    /* output: */
     // 123
     // 123
 
@@ -27,7 +27,7 @@ Future 有两种状态：`Completed`， `Uncompleted`。
       .then(print)
       .catchError(print);
 
-    // output
+    /* output: */
     // execute failed
 ```
 
@@ -40,7 +40,8 @@ Future 有两种状态：`Completed`， `Uncompleted`。
     });
     futureSuccess.then(print);
   }
-  // output: 123
+  /* output: */
+  // 123
 
   void futureFailure() {
     final Future<dynamic> futureFailure = Future(() {
@@ -49,7 +50,8 @@ Future 有两种状态：`Completed`， `Uncompleted`。
 
     futureFailure.then(print).catchError(print);
   }
-  // output: 'execute failed'
+  /* output: */
+  // 'execute failed'
 ```
 如上 `futureFailure` 例，如果后面不写 `catchError`，则执行代码时，将会直接报错而中断，而如果使用 `catchError` 则不会。  
   
@@ -78,7 +80,8 @@ Future 有两种状态：`Completed`， `Uncompleted`。
         print(value);
       });
   }
-  // output: 'Future1', 'Future2', 'Exeception: Error', 'Future3'
+  /* output: */
+  // 'Future1', 'Future2', 'Exeception: Error', 'Future3'
 ```
 如上例所示，`then` 方法流程化了异步操作，并且在 `catchError` 后，依然可以继续使用 `then` 方法。`catchError` 方法之前的任意一个 `Future` 执行错误，都会直接调用 `catchError` 方法，所以可以使用它进行错误处理。
 
@@ -110,7 +113,8 @@ Dart 中支持了 `async/await` 关键字配合来以同步的形式写异步代
         print(await futureSuccess);
         print('end');
     }
-    // output: 'start', 123, 'end'
+    /* output: */
+    // 'start', 123, 'end'
 
     // use thenable API to translate this
     void withAwait() {
@@ -134,7 +138,8 @@ Dart 中支持了 `async/await` 关键字配合来以同步的形式写异步代
       print(err);
     }
   }
-  // output: 'Exception: Error'
+  /* output: */
+  // 'Exception: Error'
 ```
 
 > `async/await` 关键字在 `Javascript`中是以 `Generate（生成器/迭代器）` 配合 `Promise` 而产生的 `语法糖`，但是在实际书写 `Dart` 代码的过程中，使用了 Dart 的 `Generator` 尝试实现 `async/await` 并没有成功， 因为 Dart 中 `Iterator` 的 `next` 方法并不能传值，所以猜测，Dart 底层实现了 async/await 语法， 而不仅仅是类似 Javascript 的语法糖。

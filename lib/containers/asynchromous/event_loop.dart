@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 class EventLoopPage extends StatelessWidget {
@@ -22,7 +24,8 @@ class EventLoopPage extends StatelessWidget {
             _buildIconButton(
               context: context,
               label: 'Event Loop Difficult',
-              onPressed: eventLoopSequenceDifficult
+              // onPressed: eventLoopSequenceDifficult
+              onPressed: test
             ),
           ],
         )
@@ -43,37 +46,55 @@ class EventLoopPage extends StatelessWidget {
     );
   }
 
-  void eventLoopSequenceSimple() async {
+  void eventLoopSequenceSimple() {
     print('start');
-    final Future<String> testFuture = Future(() => 'Future');
-    Future.delayed(Duration(seconds: 0), () => print('Delay'));
-    testFuture.then(print);
+    Future.delayed(Duration(seconds: 0), () => print('Delay Future'));
+    final Future<void> testFuture1 = Future(() => print('Future1'));
+    testFuture1.then(print).then(print);
+    final Future<void> testFuture2 = Future(() => print('Future2'));
+    testFuture2.then(print).then(print);
+    Timer(Duration(seconds: 0), () => print('Delay Timer'));
+    scheduleMicrotask(() => print('Micro Task'));
     print('end');
   }
 
-  void eventLoopSequenceDifficult() async {
+  void eventLoopSequenceDifficult() {
     print('start');
-    final Future<String> testFuture1 = Future(() => 'Future1');
-    final Future<String> testFuture2 = Future(() => 'Future2');
-    final Future<String> testFuture3 = Future(() => 'Future3');
-    final Future<String> testFuture4 = Future(() => 'Future4');
-    Future.delayed(Duration(seconds: 0), () => print('Delay1'));
-    testFuture1
-      .then((value) {
+    Future(() => 'Future1').then(print).then(print);
+    Future.delayed(Duration(seconds: 0), () => print('Future Delay1'));
+    scheduleMicrotask(() => print('Micro Task1'));
+    scheduleMicrotask(() {
+      print('Micro Task2');
+      Future(() => 'Future2').then(print).then(print);
+    });
+    scheduleMicrotask(() {
+      print('Micro Task3');
+      Future(() => 'Future3').then((value) {
         print(value);
-        return testFuture2;
-      })
-      .then((value) {
-        print(value);
-        return testFuture3;
-      })
-      .then((value) {
-        print(value);
-        Future.delayed(Duration(seconds: 0), () => print('Delay2'));
-        print('test');
-        return testFuture4;
-      })
-      .then(print);
+        scheduleMicrotask(() => print('Micro Task4'));
+      }).then(print);
+    });
+    Future(() {
+      print('Future4');
+      scheduleMicrotask(() => print('Micro Task5'));
+    }).then(print);
+    Future.delayed(Duration(seconds: 0), () {
+      print('Future Delay2');
+      Future(() => 'Future5').then(print).then(print);
+    });
+    print('end');
+  }
+
+  void test() {
+    print('start');
+    scheduleMicrotask(() {
+      print(1);
+      Future(() => 'Future2').then(print).then(print);
+      scheduleMicrotask(() {
+        print(2);
+        Future(() => 'Future1').then(print).then(print);
+      });
+    });
     print('end');
   }
 
