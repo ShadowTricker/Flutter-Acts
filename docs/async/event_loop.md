@@ -22,10 +22,10 @@
 由上例分析：  
 第一次事件循环的队列为（第一次皆为EventTask）：  
 `1. 输出 Start`  
-`2. 执行 Future.delay，添加 Delay Future 到下一次事件循环`  
-`3. 创建 Future，添加 Future 到下一次事件循环`  
-`4. 执行 Timer， 添加 Delay Timer 到下一次事件循环`  
-`5. 创建 ScheduleMicroTask 微任务， 添加 Micro Task 到下一次事件循环`  
+`2. 执行 Future.delay，添加 Delay Future 到下一次EventQueue`  
+`3. 创建 Future，添加 Future 到下一次EventQueue`  
+`4. 执行 Timer， 添加 Delay Timer 到下一次EventQueue`  
+`5. 创建 ScheduleMicroTask 微任务， 添加 Micro Task 到下一次MicroQueue`  
 `6. 输出 End`  
 此时，因为 **微任务总是优先执行**，所以最终第二次事件循环的对列为：  
 `1. 输出 'Micro Task'`  
