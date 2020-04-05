@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 class FuturePage extends StatelessWidget {
+
+  final Completer _completer = new Completer();
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +50,30 @@ class FuturePage extends StatelessWidget {
               context: context,
               label: 'With Await',
               onPressed: withAwait
+            ),
+            SizedBox(height: 20.0),
+            _buildIconButton(
+              context: context,
+              label: 'Without Await',
+              onPressed: () {
+                print(withoutAwait());
+              }
+            ),
+            SizedBox(height: 20.0),
+            _buildIconButton(
+              context: context,
+              label: 'Generate Future',
+              onPressed: () {
+                generateFuture().then(print);
+              }
+            ),
+            SizedBox(height: 20.0),
+            _buildIconButton(
+              context: context,
+              label: 'Complete Future',
+              onPressed: () {
+                testCompleter(1234);
+              }
             ),
           ],
         ),
@@ -131,6 +159,21 @@ class FuturePage extends StatelessWidget {
     });
     print(await futureSuccess);
     print('end');
+  }
+
+  withoutAwait() async {
+    print('123');
+    return 123;
+  }
+
+  Future<dynamic> generateFuture() {
+    print('generate');
+    return _completer.future;
+  }
+
+  testCompleter(dynamic value) {
+    print('complete');
+    _completer.complete(value);
   }
 
 }

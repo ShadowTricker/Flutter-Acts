@@ -70,6 +70,72 @@
   // 'timer'
 ```
 
+另外一个非常复杂的例子：  
+```dart
+  void eventLoopSequenceDifficult() {
+    print('start');
+    Future.delayed(Duration(seconds: 0), () => print('f1'));
+
+    scheduleMicrotask(() => print('f2'));
+
+    Future(() {
+      print('f3');
+      scheduleMicrotask(() {
+        print('f4');
+        Future(() {
+          print('f5');
+          return 'f6';
+        }).then(print);
+      });
+    }).then((_) {
+      print('f7');
+      Future(() => 'f8').then(print);
+      scheduleMicrotask(() => print('f9'));
+    });
+
+    Future.value(Future(() => 'f10')).then(print);
+
+    Future(() {
+      print('f11');
+      return 'f12';
+    }).then(print);
+
+    scheduleMicrotask(() {
+      print('f13');
+      Future(() {
+        print('f14');
+      });
+    });
+
+    Future.value('f15').then(print);
+
+    Future.value(Future(() => 'f16')).then(print);
+
+    Future.error('f17').then(print).catchError(print);
+
+    Future.sync(() => 'f18').then(print);
+
+    Future.microtask(() => 'f19').then(print);
+
+    scheduleMicrotask(() => print('f20'));
+    print('end');
+  }
+```
+结果如下：  
+```dart
+start end
+f2 f13 f15 f17 f18 f19 f20
+f1 f3 f7
+f4 f9
+f10 f11 f12 f16 f14 f8 f5 f6
+```
+首先，这里有几个特殊的点（未找到官方明确说明，个人测试推导之后的结论）：  
+1\. `Future` 的 `value`，`error`，`sync`，`microtask` 等方法，可以考虑成是 `同步执行` 的。  
+2\. `Future` 的 `then` 方法可以考虑成是以 `微任务形式` 执行的。  
+3\. 形如 `Future.value(Future(() => xxx))`，可以直接转换成 `Future(() => xxx)`。  
+4\. 事件任务一旦产生 `微任务`，下一个事件执行前都 `先执行并清空微任务`。  
+5\. 微任务产生微任务，按照 `层级顺序` 执行。  
+
 
 
 ---

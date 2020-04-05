@@ -4,7 +4,8 @@ class AsyncCatelogue extends StatelessWidget {
 
   final Map<String, String> catelogue =  {
     'event-loop': 'Event Loop', 'future': 'Future', 'future-builder': 'FutureBuilder',
-    'stream': 'Stream & RxDart Extensions', 'stream-builder': 'StreamBuilder'
+    'stream': 'Stream', 'rx-dart': 'RxDart Extensions',
+    'stream-builder': 'StreamBuilder'
   };
 
   @override

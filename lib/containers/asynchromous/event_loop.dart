@@ -24,8 +24,7 @@ class EventLoopPage extends StatelessWidget {
             _buildIconButton(
               context: context,
               label: 'Event Loop Difficult',
-              // onPressed: eventLoopSequenceDifficult
-              onPressed: test
+              onPressed: eventLoopSequenceDifficult
             ),
           ],
         )
@@ -60,28 +59,50 @@ class EventLoopPage extends StatelessWidget {
 
   void eventLoopSequenceDifficult() {
     print('start');
-    Future(() => 'Future1').then(print).then(print);
-    Future.delayed(Duration(seconds: 0), () => print('Future Delay1'));
-    scheduleMicrotask(() => print('Micro Task1'));
-    scheduleMicrotask(() {
-      print('Micro Task2');
-      Future(() => 'Future2').then(print).then(print);
-    });
-    scheduleMicrotask(() {
-      print('Micro Task3');
-      Future(() => 'Future3').then((value) {
-        print(value);
-        scheduleMicrotask(() => print('Micro Task4'));
-      }).then(print);
-    });
+    Future.delayed(Duration(seconds: 0), () => print('f1'));
+
+    scheduleMicrotask(() => print('f2'));
+
     Future(() {
-      print('Future4');
-      scheduleMicrotask(() => print('Micro Task5'));
-    }).then(print);
-    Future.delayed(Duration(seconds: 0), () {
-      print('Future Delay2');
-      Future(() => 'Future5').then(print).then(print);
+      print('f3');
+      scheduleMicrotask(() {
+        print('f4');
+        Future(() {
+          print('f5');
+          return 'f6';
+        }).then(print);
+      });
+    }).then((_) {
+      print('f7');
+      Future(() => 'f8').then(print);
+      scheduleMicrotask(() => print('f9'));
     });
+
+    Future.value(Future(() => 'f10')).then(print);
+
+    Future(() {
+      print('f11');
+      return 'f12';
+    }).then(print);
+
+    scheduleMicrotask(() {
+      print('f13');
+      Future(() {
+        print('f14');
+      });
+    });
+
+    Future.value('f15').then(print);
+
+    Future.value(Future(() => 'f16')).then(print);
+
+    Future.error('f17').then(print).catchError(print);
+
+    Future.sync(() => 'f18').then(print);
+
+    Future.microtask(() => 'f19').then(print);
+
+    scheduleMicrotask(() => print('f20'));
     print('end');
   }
 

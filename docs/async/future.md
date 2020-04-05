@@ -1,5 +1,5 @@
 # Future  
-`Dart` 中的 `Future` 与 `Javascript` 中的 `Promise` 基本一致，使用方法也基本一致。  
+`Dart` 中的 `Future` 与 `Javascript` 中的 `Promise` 使用方法基本一致。  
 ### 1\. Future 的状态  
 Future 有两种状态：`Completed`， `Uncompleted`。  
 执行完毕之后，状态是固定的，无法改变。  
@@ -103,8 +103,8 @@ Dart 中支持了 `async/await` 关键字配合来以同步的形式写异步代
 如上例，在函数体前加上 `async` 可以使函数体内部使用 `await` 关键字，以类似同步的方式来写异步处理。  
 **async 和 await 关键字需要配合使用。**  
 
-其实，单独在函数体前加上 `async` 关键字，而**函数体内部不使用 `await` 关键字**的话，函数是完全 **以同步的方式去运行** 的，返回值返回的结果是类型 `T`。  
-而如果 **内部使用了 `await` 关键字**，函数体执行时，`await` 关键字 **之前是同步执行**的， `await` 之后，就都属于 **异步执行**，函数体本身也从 `返回类型T` 变为 `返回 Future<T>`， 即： `T => Future<T>`。
+其实，单独在函数体前加上 `async` 关键字，而**函数体内部不使用 `await` 关键字**的话，函数是完全 **以同步的方式去运行** 的。  
+而如果 **内部使用了 `await` 关键字**，函数体执行时，`await` 关键字 **之前是同步执行**的， `await` 之后，就都属于 **异步执行**。函数体执行完毕后 `返回 Future<T>`， 即： `T => Future<T>`。
 如下例：  
 ```dart
     Future<void> withAwait() async {
@@ -126,7 +126,7 @@ Dart 中支持了 `async/await` 关键字配合来以同步的形式写异步代
         });
     }
 ```  
-> 经实测，此结论在 Javascript 中同样适用。  
+> 经实测，此结论在 Javascript 中同样适用。Dart 在 async/await 的理念跟 Javascript 是完全一致的。  
 
 关于错误处理，因为通过使用 `async/await` 的方式以同步方式写异步处理，所以错误处理也同样使用同步方式的 `try/catch`。如下例：  
 ```dart
@@ -142,6 +142,43 @@ Dart 中支持了 `async/await` 关键字配合来以同步的形式写异步代
   // 'Exception: Error'
 ```
 
-> `async/await` 关键字在 `Javascript`中是以 `Generate（生成器/迭代器）` 配合 `Promise` 而产生的 `语法糖`，但是在实际书写 `Dart` 代码的过程中，使用了 Dart 的 `Generator` 尝试实现 `async/await` 并没有成功， 因为 Dart 中 `Iterator` 的 `next` 方法并不能传值，所以猜测，Dart 底层实现了 async/await 语法， 而不仅仅是类似 Javascript 的语法糖。
+> `async/await` 关键字在 `Javascript`中是以 `Generate/Iterator（生成器/迭代器）` 配合 `Promise` 而产生的 `语法糖`（重点在 next 方法能传参数），但是在实际书写 `Dart` 代码的过程中，使用了 Dart 的 `Generator` 尝试实现 `async/await` 并没有成功， 因为 Dart 中 `Iterator` 的 `next` 方法并不能传值，所以猜测，Dart 底层实现了 async/await 语法， 而不仅仅是类似 Javascript 的语法糖。
+
+
+### 4\. Completer  
+Completer 是 Dart 中手动控制 Future 状态的方式，以此来决定执行传入 Future 中回调的执行时机。
+例：  
+```dart
+  // ...other code
+  Future<dynamic> generateFuture() {
+    print('generate');
+    return _completer.future;
+  }
+
+  testCompleter(dynamic value) {
+    print('complete');
+    _completer.complete(value);
+  }
+
+  // ...other code
+  _buildIconButton(
+    context: context,
+    label: 'Generate Future',
+    onPressed: () {
+      generateFuture().then(print);
+    }
+  ),
+  _buildIconButton(
+    context: context,
+    label: 'Complete Future',
+    onPressed: () {
+      testCompleter(1234);
+    }
+  ),
+```
+上例中，两个方法分别被绑定到了两个按钮上。  
+当我点击第一个按钮时，生成了一个 Future，同时为这个 Future 绑定了 then 方法。  
+如果我不点击第二个按钮，那么这个 Future 它会一直处于 Uncompleted 状态。只有当我点击了按钮，这个 Future 才会改变状态。  
+本质其实是将 Future 的自主运行回调的时机变为了由自己操作执行时机。  
 
 ---
