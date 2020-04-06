@@ -15,7 +15,7 @@ FutureBuilder({
     Function (BuildContext context, AsyncSnapshot snapshot)
 ```
 `snapshot` 会包含当前异步任务的状态信息及结果信息。  
-比如我们可以通过 `snapshot.connectionState` 获取异步任务的状态信息、通过  `snapshot.hasError` 判断异步任务是否有错误等等，完整的定义可以参照 `AsyncSnapshot` 类定义。  
+比如可以通过 `snapshot.connectionState` 获取异步任务的状态信息、通过  `snapshot.hasError` 判断异步任务是否有错误等等，完整的定义可以参照 `AsyncSnapshot` 类定义。  
 
 例：  
 ```dart
