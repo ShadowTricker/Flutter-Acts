@@ -79,7 +79,7 @@ Stream<int> asynchronousNaturalsTo(int n) async* {
   a.listen(print);      // 1, 2, 3
 ```
 上例中，在函数体前加上关键字 `async*`，在函数体内部则使用关键字 `yield` 返回每一个需要返回的值，然后执行这个函数，函数就会返回一个流。**而这个流在被监听前都没有执行**，只有在被监听时，这个流才开始执行。  
-`yield*` 关键字允许在流的执行另外的一个流（当然在同步迭代器函数中执行的是一个可迭代对象）：  
+`yield*` 关键字允许在流中执行另外的一个流（当然在同步迭代器函数中执行的是一个可迭代对象）：  
 ```dart
   Stream<int> natureFourToFive() async* {
     yield 4;
@@ -115,7 +115,7 @@ Stream 有很多构造方法，这里仅列出几种常用的：
   Stream<String>.value('test').listen(print);       // test
 ```
 - `Stream<T>.periodic(Duration period, [T computation(int computationCount)])`  
-创建一个根据周期自动产出值的单播流。值是通过传入的回调函数的返回值产出的，而回调函数的参数是从 `0` 开始的 `int` 类型值。
+创建一个根据周期自动产出值的单播流。值是通过传入的回调函数的返回值产出的，而回调函数的参数是从 `0` 开始的 `int` 类型值。如果不传入回调的话，会一直返回 `null`。
 ```dart
   Stream<String>.periodic(
     Duration(seconds: 1),
@@ -126,13 +126,13 @@ Stream 有很多构造方法，这里仅列出几种常用的：
   ).listen(print);
 ```
 - `Stream<T>.fromIterable(Iterable<T> elements)`  
-创建一个从传入的可迭代对象产出值的单播流。该流在被监听时开始产出值，在被取消监听，或者可迭代对象的 `Iterator.moveNext()` 方法返回 `false` 甚至报错时，停止执行。可以通过 `StreamSubscription` 对象的 `pause` 方法，挂起产出的执行。  
+创建一个通过传入的可迭代对象产出值的单播流。该流在被监听时开始产出值，在被取消监听，或者可迭代对象的 `Iterator.moveNext()` 方法返回 `false` 甚至报错时，停止执行。可以通过 `StreamSubscription` 对象的 `pause` 方法，挂起产出的执行。  
 ```dart
   final testStream = Stream<String>.fromIterable(['Just', 'A', 'Test']);
   testStream.listen(print);     // Just, A, Test
 ```
 - `Stream<T>.fromFuture(Future<T> future)`  
-创建一个根据传入 `future` 产出值的流。当 `future` 变为 `Completed` 状态时，该流则产出这个值（不管是 `Completed(Value)` 还是 `Completed(Error)`），然后该流结束。  
+创建一个根据传入的 `future` 产出值的流。当 `future` 变为 `Completed` 状态时，该流则产出这个值（不管是 `Completed(Value)` 还是 `Completed(Error)`），然后该流结束。  
 ```dart
   final testStream = Stream<String>.fromFuture(
       Future.delayed(Duration(seconds: 2), () => 'future')
