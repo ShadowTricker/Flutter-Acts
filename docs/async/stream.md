@@ -2,13 +2,13 @@
 ### 1\. 生成器/迭代器（Generator/Iterator）  
 `Dart` 语言中提供了两种生成器函数，`同步（Sync`）的生成器返回一个 `可迭代对象（Iterable Object）`，而 `异步（Async`）的生成器返回一个 `流（Stream`）。如下例：  
 ```dart
-// A synchronous generator function generates Iterator Object
+// A synchronous generator function generates an Iterator Object
 Iterable<int> naturalsTo(int n) sync* {
   int k = 0;
   while (k < n) yield k++;
 }
 
-// A asynchronous generator function generates Stream
+// An asynchronous generator function generates a Stream
 Stream<int> asynchronousNaturalsTo(int n) async* {
   int k = 0;
   while (k < n) yield k++;
@@ -63,7 +63,7 @@ Stream<int> asynchronousNaturalsTo(int n) async* {
   printStream(a);
 ```
 
-### 2\. 单播流与多播流
+### 2\. 单播流与多播流（Single-Subscription & Broadcast）
 
 ### 3\. 创建流（Create Stream）  
 创建流有三种方法，分别是创建 `async*/yield/yield* 函数`， `Stream 的构造方法`， `StreamController`。  
