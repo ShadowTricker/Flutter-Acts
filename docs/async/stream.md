@@ -63,7 +63,9 @@ Stream<int> asynchronousNaturalsTo(int n) async* {
   printStream(a);
 ```
 
-### 2\. 创建流（Create Stream）  
+### 2\. 单播流与多播流
+
+### 3\. 创建流（Create Stream）  
 创建流有三种方法，分别是创建 `async*/yield/yield* 函数`， `Stream 的构造方法`， `StreamController`。  
 
 #### 1). `async* yield/yield* 函数`  
@@ -153,4 +155,101 @@ Stream 有很多构造方法，这里仅列出几种常用的：
   testStream.listen(print);     // future5, future6, future1, future3, future2, future4
 ```
 
-3). StreamController 创建流  
+#### 3). StreamController 创建流  
+Dart 提供了 StreamController 来创建流，使用 StreamController 创建的流可以自己来控制数据产出的时机。  
+```dart
+  final StreamController<int> testStreamController = StreamController();
+
+  final subscription = testStreamController.stream.listen(print);   // 1, 2
+
+  testStreamController.add(1);
+  testStreamController.add(2);
+```
+如上例，通过调用 `StreamController` 提供的 `add` 方法，可以更新 `流的值`。  
+此处可以看出，`Dart` 中的流具有 `事件机制（观察者模式）`，当触发事件时，`监听者可以更新自身的状态`。`Flutter` 状态管理库 `Bloc`，底层的实现机制就是利用流的事件机制。  
+
+> StreamController 的构造方法  
+```dart
+  StreamController({
+    void onListen(),
+    void onPause(),
+    void onResume(),
+    void onCancel(),
+    bool sync: false
+  })
+```
+- `StreamController`：创建一个单播流，只能被一个监听者监听。  
+- `onListen`：当有监听者监听该流时被调用。  
+- `onCancel`：监听者取消监听该流时被调用。  
+- `onPause`：监听者暂停对流的监听时被调用。  
+- `onResume`：监听者恢复流的暂停状态时被调用。  
+- `sync`：流是否是同步的，默认为 `false`。  
+
+```dart
+  StreamController.broadcast({
+    void onListen(),
+    void onCancel(),
+    bool sync: false
+  })
+```
+在多播流中，每一个监听者的订阅都是独立运行的，比如对该流的一个订阅者使用 cancel 方法，取消的只是当前的订阅，而其他的订阅则不会受到影响。  
+```dart
+  // create a broadcast stream
+  final StreamController<int> testStreamController = StreamController.broadcast();
+
+  // subscribe the stream
+  final test1 = testStreamController.stream.listen((value) {
+    print('test1');
+    print(value);
+  });
+  final test2 = testStreamController.stream.listen((value) {
+    print('test2');
+    print(value);
+  });
+  StreamSubscription test3;
+
+  Future.delayed(Duration(seconds: 1), () => testStreamController.add(1));
+  Future.delayed(Duration(seconds: 2), () => testStreamController.add(2));
+  Future.delayed(Duration(seconds: 2), () {
+    test1.cancel();
+    test3 = testStreamController.stream.listen((value) {
+      print('test3');
+      print(value);
+    });
+  });
+  Future.delayed(Duration(seconds: 3), () => testStreamController.add(3));
+  Future.delayed(Duration(seconds: 4), () => testStreamController.add(4));
+  Future.delayed(Duration(seconds: 5), () {
+    test2.cancel();
+    test3.cancel();
+    testStreamController.close();
+  });
+
+  // output
+  // test1
+  // 1
+  // test2
+  // 1
+  // test1
+  // 2
+  // test2
+  // 2
+  // test2
+  // 3
+  // test3
+  // 3
+  // test2
+  // 4
+  // test3
+  // 4
+```
+如上例，在一开始 `test1` 和 `test2` 对 `testStreamController` 中的 `stream` 进行订阅，两秒后，`test1` 取消了对 `stream` 的订阅，`test3` 则在此时对 `stream` 进行了订阅。而此时 `test2` 依然对 `stream` `正常的进行着监听。test3` 因为在 `2s` 后才对 `stream` 进行监听，所以它只能接收到 `2s` 以后 `stream` 中发出的值。  
+
+> StreamController 常用的属性和方法  
+- `StreamController.stream`  
+`stream` 是只读属性，它返回这个 `controller` 所控制的 `stream。`  
+- `StreamController.add(T event)`  
+发送一个 `data` 事件，监听者将在下一个 `微任务（MicroTask）`收到这个事件。  
+- `StreamController.close()`  
+发送一个 `done` 事件，并关闭该 `stream。`
+
