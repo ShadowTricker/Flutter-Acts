@@ -148,6 +148,24 @@ Dart 中的流有两种，一种是单订阅流，一种是多播流。
     testSubscription1.cancel();
     testSubscription2.cancel();
   });
+
+  // output
+  // listener1: event 0
+  // listener2: event 0
+  // listener1: event 1
+  // listener2: event 1
+  // listener1: event 2
+  // listener2: event 2
+  // listener1: event 3
+  // listener2: event 3
+  // listener1: event 4
+  // listener1: event 5
+  // listener2: event 4
+  // listener2: event 5
+  // listener1: event 6
+  // listener2: event 6
+  // listener1: event 7
+  // listener2: event 7
 ```
 `4s` 时，`listener2` 暂停了对流的监听，此时它所监听的流的值开始进入缓冲，而 `listener1` 并没有受到影响，依然继续接收值。  
 `6s` 时，`listnener2` 恢复了对流的监听，此时缓冲区的值瞬间被监听者接收，在控制台打印日志，而后面则跟 `listener1` 一起接收后面的值。  
