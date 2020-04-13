@@ -63,7 +63,100 @@ Stream<int> asynchronousNaturalsTo(int n) async* {
   printStream(a);
 ```
 
-### 2\. 单播流与多播流（Single-Subscription & Broadcast）
+---
+
+### 2\. 单订阅流与多播流（Single-Subscription & Broadcast）  
+Dart 中的流有两种，一种是单订阅流，一种是多播流。  
+#### 1). 单订阅流（Single-Subscription Stream）  
+**单订阅流在它整个生命周期中只允许被一个监听者监听一次**。在没有监听者监听时，它并不产生值，只有在被监听后，才会产出值。当监听者取消监听后，停止产生值，哪怕依然存在可以产出的值。  
+监听同一个单订阅流两次以上是不被允许的，哪怕在前一个监听者取消监听后再去监听也是不允许的。如：  
+```dart
+  final Stream<String> testStream = Stream.periodic(
+    Duration(seconds: 1),
+    (int i) => 'event$i'
+  );
+
+  final StreamSubscription<String> testSubscription1 = testStream.listen(print);
+  StreamSubscription<String> testSubscription2;
+
+  Future.delayed(Duration(seconds: 2), () {
+    testSubscription1.cancel();
+    testSubscription2 = testStream.listen(print);
+  });
+
+  Future.delayed(Duration(seconds: 4), () {
+    testSubscription2.cancel();
+  });
+
+  // output
+  // event0
+  // event1
+  // Uncaught Error: Bad state: Stream has already been listened to.
+  // Uncaught Error: NoSuchMethodError: method not found: 'cancel$0' on null
+```
+上例中，在取消了第一次监听打算开始第二次监听时，会报错说 `流已经被监听了`，而在 `4s` 时，因为第二次没有监听成功，所以会报出 `onCancel` 在 `null` 上不存在的错误。  
+单订阅流一般用于大模块数据的传输，比如 `file` 系统的 `I/O`。
+
+#### 2). 多播流（Broadcast Stream）  
+多播流准许任意数量的监听者，且无论是否有监听者，它都能产生值。如果在流已经被监听的途中加入另外一个监听者，那么新加入的监听者只能接收到该流后续没有产出的值。  
+```dart
+  final Stream<String> testStream = Stream.periodic(Duration(seconds: 1), (int i) => 'event $i').asBroadcastStream();
+
+  final StreamSubscription<String> testSubscription1 = testStream.listen((value) => print('listener1: $value'));
+
+  StreamSubscription<String> testSubscription2;
+
+  Future.delayed(Duration(seconds: 4), () {
+    testSubscription2 = testStream.listen((value) => print('listener2: $value'));
+  });
+
+  Future.delayed(Duration(seconds: 8), () {
+    testSubscription1.cancel();
+    testSubscription2.cancel();
+  });
+
+  // output
+  // listener1: event 0
+  // listener1: event 1
+  // listener1: event 2
+  // listener1: event 3
+  // listener1: event 4
+  // listener2: event 4
+  // listener1: event 5
+  // listener2: event 5
+  // listener1: event 6
+  // listener2: event 6
+  // listener1: event 7
+  // listener2: event 7
+```
+第二个监听者在 `4s` 时开始监听，所以此时它收到第一个值是从 `4` 开始的。  
+在上例中，使用了 asBroadcastStream() 方法，它可以将单订阅流转成多播流。  
+每个监听者对于多播流的监听都可以看做对一个新流的监听（当然已经产出的值除外），因为每一个监听者对流的控制都是独立的，不会相互影响的。  
+比如，两个监听者同时监听了一个多播流，其中的一个监听者对该流进行了 `暂停（Pause）` 操作，但是另一个监听者的监听行为依然在继续着。
+```dart
+  final Stream<String> testStream = Stream.periodic(Duration(seconds: 1), (int i) => 'event $i').asBroadcastStream();
+
+  final StreamSubscription<String> testSubscription1 = testStream.listen((value) => print('listener1: $value'));
+
+  final StreamSubscription<String> testSubscription2 = testStream.listen((value) => print('listener2: $value'));
+
+  Future.delayed(Duration(seconds: 4), () => testSubscription2.pause());
+
+  Future.delayed(Duration(seconds: 6), () => testSubscription2.resume());
+
+  Future.delayed(Duration(seconds: 8), () {
+    testSubscription1.cancel();
+    testSubscription2.cancel();
+  });
+```
+`4s` 时，`listener2` 暂停了对流的监听，此时它所监听的流的值开始进入缓冲，而 `listener1` 并没有受到影响，依然继续接收值。  
+`6s` 时，`listnener2` 恢复了对流的监听，此时缓冲区的值瞬间被监听者接收，在控制台打印日志，而后面则跟 `listener1` 一起接收后面的值。  
+
+当 `流（Stream）` 完成了所有的值得产出后，会发出 `done` 事件，然后结束该流，流就没有监听者了。在流结束后依然可以监听流，只不过会立刻接收到 `done` 事件而已。
+
+如果要在 `Stream` 类上继承多播流，记得重写 `isBroadcast` 属性，因为默认的值是 `false`。
+
+---
 
 ### 3\. 创建流（Create Stream）  
 创建流有三种方法，分别是创建 `async*/yield/yield* 函数`， `Stream 的构造方法`， `StreamController`。  
@@ -112,12 +205,12 @@ Stream<int> asynchronousNaturalsTo(int n) async* {
 #### 2). Stream 的构造方法  
 Stream 有很多构造方法，这里仅列出几种常用的：  
 - `Stream<T>.value(T value)`  
-创建一个产出单个值的单播流，当值被产出时，这个流也宣告结束（Completed）。  
+创建一个产出单个值的单订阅流，当值被产出时，这个流也宣告结束（Completed）。  
 ```dart
   Stream<String>.value('test').listen(print);       // test
 ```
 - `Stream<T>.periodic(Duration period, [T computation(int computationCount)])`  
-创建一个根据周期自动产出值的单播流。值是通过传入的回调函数的返回值产出的，而回调函数的参数是从 `0` 开始的 `int` 类型值。如果不传入回调的话，会一直返回 `null`。
+创建一个根据周期自动产出值的单订阅流。值是通过传入的回调函数的返回值产出的，而回调函数的参数是从 `0` 开始的 `int` 类型值。如果不传入回调的话，会一直返回 `null`。
 ```dart
   Stream<String>.periodic(
     Duration(seconds: 1),
@@ -128,7 +221,7 @@ Stream 有很多构造方法，这里仅列出几种常用的：
   ).listen(print);
 ```
 - `Stream<T>.fromIterable(Iterable<T> elements)`  
-创建一个通过传入的可迭代对象产出值的单播流。该流在被监听时开始产出值，在被取消监听，或者可迭代对象的 `Iterator.moveNext()` 方法返回 `false` 甚至报错时，停止执行。可以通过 `StreamSubscription` 对象的 `pause` 方法，挂起产出的执行。  
+创建一个通过传入的可迭代对象产出值的单订阅流。该流在被监听时开始产出值，在被取消监听，或者可迭代对象的 `Iterator.moveNext()` 方法返回 `false` 甚至报错时，停止执行。可以通过 `StreamSubscription` 对象的 `pause` 方法，挂起产出的执行。  
 ```dart
   final testStream = Stream<String>.fromIterable(['Just', 'A', 'Test']);
   testStream.listen(print);     // Just, A, Test
@@ -142,7 +235,7 @@ Stream 有很多构造方法，这里仅列出几种常用的：
   testStream.listen(print);     // future
 ```
 - `Stream<T>.fromFutures(Iterable<Future<T>> futures)`  
-通过一组 `future` 来创建一个单播流。该流根据 `future` 的完成顺序（即变为 `Completed` 状态，`value` 或者 `error`）来产出值。当所有 `future` 都完成时，流也变为 `Completed` 并关闭。如果 `futures` 是空的，则流立即关闭。
+通过一组 `future` 来创建一个单订阅流。该流根据 `future` 的完成顺序（即变为 `Completed` 状态，`value` 或者 `error`）来产出值。当所有 `future` 都完成时，流也变为 `Completed` 并关闭。如果 `futures` 是空的，则流立即关闭。
 ```dart
   final testStream = Stream<String>.fromFutures([
     Future.delayed(Duration(seconds: 1), () => 'future1'),
@@ -178,7 +271,7 @@ Dart 提供了 StreamController 来创建流，使用 StreamController 创建的
     bool sync: false
   })
 ```
-- `StreamController`：创建一个单播流，只能被一个监听者监听。  
+- `StreamController`：创建一个单订阅流，只能被一个监听者监听。  
 - `onListen`：当有监听者监听该流时被调用。  
 - `onCancel`：监听者取消监听该流时被调用。  
 - `onPause`：监听者暂停对流的监听时被调用。  
@@ -252,4 +345,7 @@ Dart 提供了 StreamController 来创建流，使用 StreamController 创建的
 发送一个 `data` 事件，监听者将在下一个 `微任务（MicroTask）`收到这个事件。  
 - `StreamController.close()`  
 发送一个 `done` 事件，并关闭该 `stream。`
+
+
+---
 
