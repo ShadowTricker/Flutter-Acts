@@ -375,22 +375,13 @@ Dart 提供了 StreamController 来创建流，使用 StreamController 创建的
 使用循环的方式可以接收流的数据：  
 ```dart
   final Stream<int> testStream = Stream.fromIterable([1, 2, 3]);
-  
+
   Future<void> recieveData(Stream<int> stream) async {
     await for(var data in stream) {
       print(data);
     }
   }
-  
-  final result = recieveData(testStream);
-  print(result);final Stream<int> testStream = Stream.fromIterable([1, 2, 3]);
-  
-  Future<void> recieveData(Stream<int> stream) async {
-    await for(var data in stream) {
-      print(data);
-    }
-  }
-  
+
   final result = recieveData(testStream);
   print(result);
   Future.delayed(Duration(seconds: 0), () => print(result));
