@@ -364,6 +364,62 @@ Dart 提供了 StreamController 来创建流，使用 StreamController 创建的
 - `StreamController.close()`  
 发送一个 `done` 事件，并关闭该 `stream。`
 
+---
+
+### 4\. 监听流（Listen Stream）  
+`Dart` 中，想要监听流的变化有两种方式：  
+- 使用 `await for/in` 来接收流数据  
+- 使用 `listen()` 方法监听流的变化  
+
+#### 1). await for/in  
+使用循环的方式可以接收流的数据：  
+```dart
+  final Stream<int> testStream = Stream.fromIterable([1, 2, 3]);
+  
+  Future<void> recieveData(Stream<int> stream) async {
+    await for(var data in stream) {
+      print(data);
+    }
+  }
+  
+  final result = recieveData(testStream);
+  print(result);final Stream<int> testStream = Stream.fromIterable([1, 2, 3]);
+  
+  Future<void> recieveData(Stream<int> stream) async {
+    await for(var data in stream) {
+      print(data);
+    }
+  }
+  
+  final result = recieveData(testStream);
+  print(result);
+  Future.delayed(Duration(seconds: 0), () => print(result));
+
+  // output
+  // Instance of '_Future<void>'
+  // 1
+  // 2
+  // 3
+  // Instance of '_Future<void>'
+```
+在函数体前添加关键字 `async`，而在正常的 `for` 循环前加上 `await` 关键字，返回一个 `Future` 对象。每一次循环都将获取一个流中的 `data`。当流中的所有数据都被产出之后，也就是流结束之后，循环就会退出。  
+
+#### 2). listen()  
+监听一个流最常用的方式就是使用 `Dart` 提供的 `listen` 方法。  
+```dart
+  StreamSubscription<T> listen(
+    void onData(T event),
+    {
+      Function onError,
+      void onDone,
+      bool cancelOnError
+    }
+  )
+```
+`listen` 方法返回一个 `Subscription` 对象，可以通过它来对流进行解除监听，`暂停/恢复` 流的运行等功能。  
+`listen` 方法拥有一个必须的参数 `onData()` 回调，以它来接收流中产出的值。如果给 `onData` 回调设置为 `null`，则将不再触发产出值的监听。其余三个可选参数 `onError` 在收到错误时触发，`onDone` 在流完成时触发，`cancelOnError` 表示的是当该流接收到第一个 `Error` 时，是否继续监听流，默认是 `false。`  
 
 ---
+
+### 5\. 转换流（Transform Stream）  
 
