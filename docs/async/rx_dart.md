@@ -1,6 +1,6 @@
 # Stream Transforming & RxDart  
 ### 1\. 流的转换  
-**流可以转换成另外的流**。  
+**流可以转换成另外的流**。转换的本质是 **使用输出的流产出一个新的流**。  
 Dart 中提供了一部分转换的函数方法，当然也可以自定义转换流的转换器。  
 #### 1). 常用的转换方法  
 `Stream<S> map<S>(S convert(T event))`，用于映射值：  
@@ -47,7 +47,7 @@ Dart 中提供了一部分转换的函数方法，当然也可以自定义转换
     return streamTransformer.bind(this);
   }
 ```
-上面 `transform` 方法的定义中， 传入一个转换器 `StreamTransformer` 实例，该实例在执行方法时，将使用 `T` 类型作为输入类型（通过 `bind(this)`），`S` 类型作为输出类型返回，`tranform` 方法则继续返回该转换器输出的类型 `S`。转换的本质是 **使用输出的流产出一个新的流**。  
+上面 `transform` 方法的定义中， 传入一个转换器 `StreamTransformer` 实例，该实例在执行方法时，将使用 `T` 类型作为输入类型（通过 `bind(this)`），`S` 类型作为输出类型返回，`tranform` 方法则继续返回该转换器输出的类型 `S`。。  
 `StreamTransformer` 拥有三种构造方法：  
 ```dart
   StreamTransformer<T, S>(
@@ -57,7 +57,7 @@ Dart 中提供了一部分转换的函数方法，当然也可以自定义转换
     )
   )
 ```
-第一种， StreamTransformer 接收一个 onListen 回调函数，这个回调函数接收需要转换的 Stream 以及遇到错误是否取消监听的 flag，返回一个 新流的 Subscription。如下例：  
+第一种， `StreamTransformer` 接收一个 `onListen` 回调函数，这个回调函数接收需要转换的 `Stream` 以及遇到错误是否取消监听的 `flag`，返回一个 新流的 `Subscription`。如下例：  
 ```dart
   //// Starts listening to [input] and stringify all non-error events.
   StreamSubscription<String> _onListen(Stream<int> input, bool cancelOnError) {
@@ -161,6 +161,8 @@ Dart 中提供了一部分转换的函数方法，当然也可以自定义转换
     (stream) => stream.transform(utf8.decoder).transform(LineSplitter())
   );
 ```
+
+---
 
 ### 2\. RxDart  
 
