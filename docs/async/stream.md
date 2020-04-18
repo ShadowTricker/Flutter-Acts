@@ -37,7 +37,7 @@ Stream<int> asynchronousNaturalsTo(int n) async* {
 `Iterator` 的 `next()` 方法可以传值，配合 `yield` 关键字 与 `Promise` ，可以简化 JS 中的异步流程， 也就是 JS 中 `async/await` 语法糖的前身。  
 
 异步的生成器返回一个 `流（Stream）`。  
-流是一种抽象的概念，它是一系列的数据的集合。**它可以被监听转换**。  
+流是一种抽象的概念，它是一段时间内一系列的数据的集合。**它可以被监听转换**。  
 举个形象的例子，蒸馏水的生产流程：  
 - `流（data）`是流入水管中的水。
 - 当经过 `滤器（filter）`时，`过滤` 掉大部分杂质。
@@ -393,7 +393,7 @@ Dart 提供了 StreamController 来创建流，使用 StreamController 创建的
   // 3
   // Instance of '_Future<void>'
 ```
-在函数体前添加关键字 `async`，而在正常的 `for` 循环前加上 `await` 关键字，返回一个 `Future` 对象。每一次循环都将获取一个流中的 `data`。当流中的所有数据都被产出之后，也就是流结束之后，循环就会退出。  
+在函数体前添加关键字 `async`，而在正常的 `for` 循环前加上 `await` 关键字，返回一个 `Future` 对象。每一次循环都将获取一个流中的 `data`。当流中的所有数据都被产出之后，也就是流结束时，循环就会退出。  
 
 #### 2). listen()  
 监听一个流最常用的方式就是使用 `Dart` 提供的 `listen` 方法。  
@@ -411,7 +411,5 @@ Dart 提供了 StreamController 来创建流，使用 StreamController 创建的
 `listen` 方法拥有一个必须的参数 `onData()` 回调，以它来接收流中产出的值。如果给 `onData` 回调设置为 `null`，则将不再触发产出值的监听。其余三个可选参数 `onError` 在收到错误时触发，`onDone` 在流完成时触发，`cancelOnError` 表示的是当该流接收到第一个 `Error` 时，是否继续监听流，默认是 `false。`  
 
 ---
-
-### 5\. 转换流（Transform Stream）  
 
 
