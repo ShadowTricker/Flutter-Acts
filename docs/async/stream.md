@@ -98,7 +98,7 @@ Dart 中的流有两种，一种是单订阅流，一种是多播流。
 单订阅流一般用于大模块数据的传输，比如 `file` 系统的 `I/O`。
 
 #### 2). 多播流（Broadcast Stream）  
-多播流准许任意数量的监听者，且无论是否有监听者，它都能产生值。如果在流已经被监听的途中加入另外一个监听者，那么新加入的监听者只能接收到该流后续没有产出的值。  
+多播流准许任意数量的监听者，且无论是否有监听者，它都能产生值。如果在流已经被监听的途中加入另外一个监听者，那么新加入的监听者只能接收到该流后续产出的值。  
 ```dart
   final Stream<String> testStream = Stream.periodic(Duration(seconds: 1), (int i) => 'event $i').asBroadcastStream();
 

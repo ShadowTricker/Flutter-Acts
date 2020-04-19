@@ -47,7 +47,7 @@ Dart 中提供了一部分转换的函数方法，当然也可以自定义转换
     return streamTransformer.bind(this);
   }
 ```
-上面 `transform` 方法的定义中， 传入一个转换器 `StreamTransformer` 实例，该实例在执行方法时，将使用 `T` 类型作为输入类型（通过 `bind(this)`），`S` 类型作为输出类型返回，`tranform` 方法则继续返回该转换器输出的类型 `S`。。  
+上面 `transform` 方法的定义中， 传入一个转换器 `StreamTransformer` 实例，该实例在执行方法时，将使用 `T` 类型作为输入类型（通过 `bind(this)`），`S` 类型作为输出类型返回，`tranform` 方法则继续返回该转换器输出的类型 `S`。  
 `StreamTransformer` 拥有三种构造方法：  
 ```dart
   StreamTransformer<T, S>(

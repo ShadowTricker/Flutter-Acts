@@ -20,7 +20,7 @@ Javascript 中，则是由 宏任务队列（`MacroTaskQueue`）与 微任务队
   // Future2
 ```
 2\. `Future` 的 `then` 方法可以考虑成是以 `微任务形式` 执行的。  
-3\. 每一次事件循环，`都先执行队列中的微任务`，事件任务一旦产生 `微任务`，下一个事件执行前都 `先执行并清空微任务`。  
+3\. 每一次事件循环，`都先执行队列中的微任务`，事件任务一旦产生 `微任务`，下一个事件执行前都 `先执行并清空微任务`；一次事件循环可以执行多个微任务，但只执行一个事件任务。  
 4\. 微任务产生微任务，按照 `层级顺序` 执行。  
 ```dart
   scheduleMicrotask(() {
@@ -63,7 +63,7 @@ Javascript 中，则是由 宏任务队列（`MacroTaskQueue`）与 微任务队
 > 在 `Javascript` 中，任务队列分为 宏任务（MacroTask）和 微任务（MicroTask）。  
 > `Promise 的 thenable` 和 `UI更新` 在 Javascript 中是常见的微任务。  
 
-创建 Future（Promise）本身是同步任务，是否异步取决于返回结果的时机，thenable API 的执行是微任务。  
+创建 Future（Promise）本身是同步任务，快慢取决于返回结果的时机，thenable API 的执行是微任务。  
 例：  
 ```dart
   void eventLoopSequenceSimple() {
