@@ -165,5 +165,70 @@ Dart 中提供了一部分转换的函数方法，当然也可以自定义转换
 ---
 
 ### 2\. RxDart  
+`Rx` 全称 `Reactive Extensions`，是一个基于 `观察者模式` 和 `迭代器模式`，使用 `函数式编程思想` 和 `响应式编程思想` 管理 `序列上的事件` 的库。  
+函数式思想体现在 `操作符` 上，响应式思想则利用了观察者模式去体现，而迭代器模式，则体现在一次只产生一个 `event`。  
+`RxDart` 则是 `ReactiveX` 在 `Dart` 语言中的实现，它的扩展使对 `Dart` 中流的控制更加方便。  
+它对 Stream 做了以下拓展：  
+#### 1). Stream Classes  
+Stream Classes 提供了对流的一些特殊操作，比如将多个流进行组合（Combine）或者合并（Merge）。  
+```dart
+  /// concat two streams
+  final Stream<int> concatedSource = ConcatStream([
+    Stream.fromIterable([1, 2, 3, 4]),
+    Stream.fromIterable([5, 6, 7, 8])
+  ]);
 
+  // ...other data here
+
+  /// listen the concated stream
+  concatedSubscrition = concatedSource.listen(print);
+```
+上例中，通过 ConcatStream 方法，将两个流组合在一起生成一个新的流。  
+
+#### 2). Extension Methods  
+Extension Methods 指的是对流添加了一些 Dart 中没有的操作符，比如下例中使用的 delay 和 startWith：  
+```dart
+  concatedSubscrition = concatedSource.startWith(0).delay(Duration(seconds: 3)).listen(print);
+```
+该流在被订阅时，首先会在流的开始添加一个初始值 0，延迟 3s 后才会将 event 传递给监听者。  
+操作符是纯函数，它返回了一个监听源流的新流，所以每当对新的流进行监听之后，就会触发源流的监听，然后依次向上，直到触发初始流的监听，事件才会从原始流向下传递。  
+```dart
+  Stream<T> delay(Duration duration) => transform(DelayStreamTransformer<T>(duration));
+```
+可以看到操作符本身就是对 transform() 的返回。  
+
+#### 3). Subjects  
+Subjects 是一个由 rx 提供的 StreamController，它默认生成一个多播流。  
+- BehaviorSubject  
+一个缓存了最后一次 event 的多播流。当一个新的监听者监听这个流，它会立即将之前发送过的最后一个值返回给这个监听者。  
+
+- ReplaySubject  
+一个缓存传入参数数量 event 的多播流。当一个新的监听者监听这个流，它会立即将之前缓存过的 event 返回给这个监听者。  
+```dart
+  final ReplaySubject<int> replaySubject = ReplaySubject(maxSize: 3);
+
+  firstSubscription = replaySubject.listen((int event) => print('ListenerA: $event'));
+    replaySubject.add(1);
+    replaySubject.add(2);
+    replaySubject.add(3);
+    replaySubject.add(4);
+    replaySubject.add(5);
+
+  secondSubscription = replaySubject.listen((int event) => print('ListenerB: $event'));
+
+  //output
+  // ListenerA: 1
+  // ListenerA: 2
+  // ListenerA: 3
+  // ListenerA: 4
+  // ListenerA: 5
+  // ListenerB: 3
+  // ListenerB: 4
+  // ListenerB: 5
+```
+
+RxDart 并没有提供它自己的 Observable类，它只是在 Dart 的流上进行了以上所说的拓展。下面是原版的 Rx 和 Stream 的对比。  
+![diff](../../assets/doc_images/diff.png)  
+
+---
 

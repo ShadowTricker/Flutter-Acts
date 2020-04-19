@@ -5,12 +5,15 @@ import 'package:flutter/material.dart';
 class FuturePage extends StatelessWidget {
 
   final Completer _completer = new Completer();
+  final String title;
+
+  FuturePage({ this.title });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Future'),
+        title: Text(title),
       ),
       body: Center(
         child: Column(

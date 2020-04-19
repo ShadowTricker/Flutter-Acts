@@ -16,7 +16,7 @@ class SharedContextWidget extends InheritedWidget {
   }
 
   static SharedContextWidget of(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType();
+    return context.dependOnInheritedWidgetOfExactType<SharedContextWidget>();
   }
 
 }

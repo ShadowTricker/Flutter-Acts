@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 
 class FutureBuilderPage extends StatelessWidget {
 
+  final String title;
+  FutureBuilderPage({ this.title });
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Future Builder'),
+        title: Text(title),
       ),
       body: _buildBody(context)
     );

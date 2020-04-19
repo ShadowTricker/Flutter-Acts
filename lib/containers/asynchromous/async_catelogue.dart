@@ -33,7 +33,7 @@ class AsyncCatelogue extends StatelessWidget {
           trailing: Icon(Icons.keyboard_arrow_right),
           contentPadding: EdgeInsets.symmetric(horizontal: 10.0),
           onTap: () {
-            Navigator.of(context).pushNamed('/$key');
+            Navigator.of(context).pushNamed('/$key', arguments: value);
           },
         );
       },

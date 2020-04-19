@@ -4,11 +4,15 @@ import 'package:flutter/material.dart';
 
 class EventLoopPage extends StatelessWidget {
 
+  final String title;
+
+  EventLoopPage({ this.title });
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Event Loop'),
+        title: Text(title),
       ),
       body: Center(
         child: Column(
