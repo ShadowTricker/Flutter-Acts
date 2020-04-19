@@ -1,5 +1,5 @@
 # StreamBuilder  
-`StreamBuilder` 正是用于配合 `Stream` 来展示流上事件（数据）变化的 `UI组件` 。  
+`StreamBuilder` 是用于配合 `Stream` 来展示流上事件（数据）变化的 `UI组件` 。  
 下面是 `StreamBuilder` 的默认构造函数：  
 ```dart
   StreamBuilder({

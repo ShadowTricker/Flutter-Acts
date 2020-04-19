@@ -1,12 +1,69 @@
 # Event Loop（事件循环）  
 `Dart` 中的事件循环机制原理与 `Javasript` 中的基本一致。  
-每一次事件循环都是一个任务队列（`Task Queue`），每个任务队列由 事件队列（`EventQueue`）和 微任务队列（`MicroQueue`）组成。  
-不同的是在两种语言中，宏任务和微任务的分类是不同的。  
-`Dart` 中的微任务通过 `scheduleMicroTask` 创建，而诸如 `Future` 等都归类于事件任务。
-> 在 `Javascript` 中，任务队列分为 宏任务（MacroTask）和 微任务（MicroTask）。  
-> 与 `Future` 概念类似的 `Promise` 是属于微任务的范畴，`Promise` 和 `UI更新` 在 Javascript 中是常见的微任务， 但在 Dart 中则不是。  
+Dart 中每一次事件循环都是一个任务队列（`Task Queue`），任务队列由 事件队列（`EventQueue`）和 微任务队列（`MicroQueue`）组成。  
+Javascript 中，则是由 宏任务队列（`MacroTaskQueue`）与 微任务队列（`MicroTaskQueue`）。  
+`Dart` 中的微任务通过 `scheduleMicroTask` 创建，而诸如 `Future` 等都归类于事件任务。  
 
-执行的顺序是，每一次事件循环，**都先执行队列中的** `微任务`，当微任务完成时，执行`宏任务`。  
+首先，这里有几个特殊的点（未找到官方明确说明，个人测试推导之后的结论）：  
+1\. `Future` 的 `value`，`error`，`sync`，`microtask` 等方法，如果传入的值是原始值，则 Future 会立即执行；如果传入的 Future，则会等待 Future 执行完毕之后再执行。  
+```dart
+  final Future<String> future1 = Future(() => 'Future1');
+  future1.then(print);
+  final Future<String> future2 = Future.value(Future(() => 'Future2'));
+  future2.then(print);
+  final Future<String> future3 = Future.value('Future3');
+  future3.then(print);
+
+  // output
+  // Future3
+  // Future1
+  // Future2
+```
+2\. `Future` 的 `then` 方法可以考虑成是以 `微任务形式` 执行的。  
+3\. 每一次事件循环，`都先执行队列中的微任务`，事件任务一旦产生 `微任务`，下一个事件执行前都 `先执行并清空微任务`。  
+4\. 微任务产生微任务，按照 `层级顺序` 执行。  
+```dart
+  scheduleMicrotask(() {
+    print('1');
+
+    scheduleMicrotask(() {
+      print('2');
+      print('3');
+    });
+
+    scheduleMicrotask(() {
+      print('4');
+
+      scheduleMicrotask(() {
+        print('5');
+      });
+    });
+  });
+
+  scheduleMicrotask(() {
+    print('6');
+
+    scheduleMicrotask(() {
+      print('7');
+      print('8');
+    });
+
+    scheduleMicrotask(() {
+      print('9');
+
+      scheduleMicrotask(() {
+        print('10');
+      });
+    });
+  });
+
+  // output: 1 6 2 3 4 7 8 9 5 10
+```
+
+> 在 `Javascript` 中，任务队列分为 宏任务（MacroTask）和 微任务（MicroTask）。  
+> `Promise 的 thenable` 和 `UI更新` 在 Javascript 中是常见的微任务。  
+
+创建 Future（Promise）本身是同步任务，是否异步取决于返回结果的时机，thenable API 的执行是微任务。  
 例：  
 ```dart
   void eventLoopSequenceSimple() {
@@ -36,10 +93,29 @@
 
 所以最终的表现结果为：  
 `start`， `end`， `Micro Task`， `Delay Future`， `Future`， `null`， `Delay Timer`；  
-
-重点在输出 `Future` 之后， 执行了 `then` 方法输出了 `null` 而不是输出 `Delay Timer`， 这是与 `Javascript` 所区别的地方。  
 附 JS 代码：  
 ```ts
+  function test() {
+    console.log('start');
+    const testPromise1 = new Promise((resolve) => {
+        setTimeout(() => {
+            resolve(1);
+        }, 0);
+    });
+    const testPromise2 =  new Promise((resolve) => {
+        resolve(2);
+    });
+    const testPromise3 = new Promise((resolve) => {
+        setTimeout(() => {
+            resolve(3);
+        }, 0);
+    });
+    testPromise3.then(console.log);
+    testPromise1.then(console.log);
+    testPromise2.then(console.log);
+    console.log('end');
+  }
+
   function testAsync() {
     console.log('start');
     setTimeout(() => {
@@ -129,13 +205,5 @@ f1 f3 f7
 f4 f9
 f10 f11 f12 f16 f14 f8 f5 f6
 ```
-首先，这里有几个特殊的点（未找到官方明确说明，个人测试推导之后的结论）：  
-1\. `Future` 的 `value`，`error`，`sync`，`microtask` 等方法，可以考虑成是 `同步执行` 的。  
-2\. `Future` 的 `then` 方法可以考虑成是以 `微任务形式` 执行的。  
-3\. 形如 `Future.value(Future(() => xxx))`，可以直接转换成 `Future(() => xxx)`。  
-4\. 事件任务一旦产生 `微任务`，下一个事件执行前都 `先执行并清空微任务`。  
-5\. 微任务产生微任务，按照 `层级顺序` 执行。  
-
-
 
 ---
