@@ -1,7 +1,7 @@
 # Stream Transforming & RxDart  
 ### 1\. 流的转换  
-**流可以转换成另外的流**。转换的本质是 **使用输出的流产出一个新的流**。  
-Dart 中提供了一部分转换的函数方法，当然也可以自定义转换流的转换器。  
+**流可以转换成另外的流**。转换的本质是 **使用输入的流产出一个新的流**。  
+`Dart` 中提供了一部分转换的函数方法，当然也可以自定义转换流的转换器。  
 #### 1). 常用的转换方法  
 `Stream<S> map<S>(S convert(T event))`，用于映射值：  
 ```dart
@@ -41,7 +41,7 @@ Dart 中提供了一部分转换的函数方法，当然也可以自定义转换
 ```
 
 #### 2). 自定义转换方法  
-当 Dart 中提供的操作方法无法满足自身的需求时，可以使用 transform 方法传入自己定义的转换器。  
+当 `Dart` 中提供的操作方法无法满足自身的需求时，可以使用 `transform` 方法传入自己定义的转换器。  
 ```dart
   Stream<S> transform<S>(StreamTransformer<T, S> streamTransformer) {
     return streamTransformer.bind(this);

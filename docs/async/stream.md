@@ -130,7 +130,7 @@ Dart 中的流有两种，一种是单订阅流，一种是多播流。
   // listener2: event 7
 ```
 第二个监听者在 `4s` 时开始监听，所以此时它收到第一个值是从 `4` 开始的。  
-在上例中，使用了 asBroadcastStream() 方法，它可以将单订阅流转成多播流。  
+在上例中，使用了 `asBroadcastStream()` 方法，它可以将单订阅流转成多播流。  
 每个监听者对于多播流的监听都可以看做对一个新流的监听（当然已经产出的值除外），因为每一个监听者对流的控制都是独立的，不会相互影响的。  
 比如，两个监听者同时监听了一个多播流，其中的一个监听者对该流进行了 `暂停（Pause）` 操作，但是另一个监听者的监听行为依然在继续着。
 ```dart
@@ -180,7 +180,7 @@ Dart 中的流有两种，一种是单订阅流，一种是多播流。
 创建流有三种方法，分别是创建 `async*/yield/yield* 函数`， `Stream 的构造方法`， `StreamController`。  
 
 #### 1). `async* yield/yield* 函数`  
-使用 async* 函数创建流，如下所示：  
+使用 `async*` 函数创建流，如下所示：  
 ```dart
   Stream<int> natureToThree() async* {
     yield 1;
@@ -221,9 +221,9 @@ Dart 中的流有两种，一种是单订阅流，一种是多播流。
 ```
 
 #### 2). Stream 的构造方法  
-Stream 有很多构造方法，这里仅列出几种常用的：  
+`Stream` 有很多构造方法，这里仅列出几种常用的：  
 - `Stream<T>.value(T value)`  
-创建一个产出单个值的单订阅流，当值被产出时，这个流也宣告结束（Completed）。  
+创建一个产出单个值的单订阅流，当值被产出时，这个流也 `宣告结束（Completed）`。  
 ```dart
   Stream<String>.value('test').listen(print);       // test
 ```
@@ -267,7 +267,7 @@ Stream 有很多构造方法，这里仅列出几种常用的：
 ```
 
 #### 3). StreamController 创建流  
-Dart 提供了 StreamController 来创建流，使用 StreamController 创建的流可以自己来控制数据产出的时机。  
+`Dart` 提供了 `StreamController` 来创建流，使用 `StreamController` 创建的流可以自己来控制数据产出的时机。  
 ```dart
   final StreamController<int> testStreamController = StreamController();
 
@@ -303,7 +303,7 @@ Dart 提供了 StreamController 来创建流，使用 StreamController 创建的
     bool sync: false
   })
 ```
-在多播流中，每一个监听者的订阅都是独立运行的，比如对该流的一个订阅者使用 cancel 方法，取消的只是当前的订阅，而其他的订阅则不会受到影响。  
+在多播流中，每一个监听者的订阅都是独立运行的，比如对该流的一个订阅者使用 `cancel` 方法，取消的只是当前的订阅，而其他的订阅则不会受到影响。  
 ```dart
   // create a broadcast stream
   final StreamController<int> testStreamController = StreamController.broadcast();
@@ -412,4 +412,69 @@ Dart 提供了 StreamController 来创建流，使用 StreamController 创建的
 
 ---
 
+### 5\. 取消 & 关闭（Cancel & Close）  
+#### 1). 取消
+当使用 listen() 方法对流进行监听时， 流会返回一个 StreamSubscription 对象，可以使用此对象的 cancel() 方法对流的监听进行取消。  
+而根据流种类的不同（单订阅流和多播流），取消的效果也不一样。
+- 单订阅流  
+> 当监听者取消监听时，流停止产生值，即使它依然可以产生更多的值。  
+- 多播流  
+> 多播流准许多个监听者监听，且无论是否有监听者，它都会产生值。当流发出 done 事件时，监听者们在接收到该事件之前取消对流的监听。  
+
+1. 流在没有被监听前是不产出值的。  
+2. 流被监听后，不管是否有监听者，它依然在产出新的值，直到该流结束。
+
+```dart
+  Stream<int> testStream = Stream.periodic(Duration(seconds: 1), (value) => value).take(20).asBroadcastStream();
+
+  StreamSubscription subscription1 = testStream.listen((v) {
+    print('lsn1: $v');
+  });
+  StreamSubscription subscription2 = testStream.listen((v) {
+    print('lsn2: $v');
+  });
+  StreamSubscription subscription3;
+
+  Timer(Duration(seconds: 5), () => subscription1.cancel());
+
+  Timer(Duration(seconds: 10), () => subscription2.cancel());
+
+  Timer(Duration(seconds: 18), () => subscription3 = testStream.listen((v) {
+    print('lsn3: $v');
+  }));
+
+  Timer(Duration(seconds: 22), () => subscription3.cancel());
+```
+由上例可见，多播流在被监听过一次以后，哪怕没有监听者，其依然在内存中继续运行，直到流结束。  
+
+#### 2). 关闭  
+普通方法创建的流是没有关闭方式的，关闭的方法只存在于 `StreamController`。
+```dart
+  StreamController<int> streamCtrl;
+  streamCtrl = StreamController.broadcast(
+    onCancel: () {
+      print(streamCtrl.hasListener);
+      if (!streamCtrl.hasListener) {
+        streamCtrl.close();
+      }
+    }
+  );
+  final lsn1 = streamCtrl.stream.listen((v) => print('lsn1: $v'));
+  final lsn2 = streamCtrl.stream.listen((v) => print('lsn2: $v'));
+
+  streamCtrl.add(1);
+  streamCtrl.add(2);
+
+  Timer(Duration(seconds: 4), () {
+    lsn1.cancel();
+    streamCtrl.add(3);
+    streamCtrl.add(4);
+  });
+
+  Timer(Duration(seconds: 8), () {
+    lsn2.cancel();
+    streamCtrl.add(5);
+  });
+```
+上例中，在创建 `StreamController` 时，为 `onCancel` 事件添加函数，使流在没有监听者时，自己关闭。当流关闭后，就无法再产生值。
 
