@@ -303,6 +303,7 @@ Dart 中的流有两种，一种是单订阅流，一种是多播流。
     bool sync: false
   })
 ```
+多播流中不存在 `onPause` 和 `onResume` 方法。并且 `onListen` 是在第一次被监听时触发，同样的， `onCancel` 是在最后一个监听者取消监听后触发。  
 在多播流中，每一个监听者的订阅都是独立运行的，比如对该流的一个订阅者使用 `cancel` 方法，取消的只是当前的订阅，而其他的订阅则不会受到影响。  
 ```dart
   // create a broadcast stream
@@ -361,8 +362,39 @@ Dart 中的流有两种，一种是单订阅流，一种是多播流。
 `stream` 是只读属性，它返回这个 `controller` 所控制的 `stream。`  
 - `StreamController.add(T event)`  
 发送一个 `data` 事件，监听者将在下一个 `微任务（MicroTask）`收到这个事件。  
+- `StreamController.addStream(Stream<T> source, { bool cancelOnError })`  
+接收 `source` 中的 `data` 并将它们放入当前的 `controller` 中，只有当 `source` 发送了 `done` 事件之后，才能使用 `StreamController` 中的其它方法。返回一个 `Future`。  
+```dart
+  final Stream<int> testStream = Stream.periodic(Duration(seconds: 1), (int value) => value).take(3);
+
+  StreamController<int> streamCtrl;
+  streamCtrl = StreamController.broadcast(
+    onCancel: () {
+      print(streamCtrl.hasListener);
+      streamCtrl.close();
+    }
+  );
+  final lsn1 = streamCtrl.stream.listen((v) => print('lsn1: $v'));
+
+  streamCtrl.add(1);
+  streamCtrl.add(2);
+
+  final Future<dynamic> isCompleted = streamCtrl.addStream(testStream);
+
+  // streamCtrl.add(5);
+  // streamCtrl.add(6);
+
+  isCompleted.then((value) {
+    print('value: $value');
+    streamCtrl.add(7);
+    streamCtrl.add(8);
+  });
+
+  Timer(Duration(seconds: 10), () => lsn1.cancel());
+```
+此处，如果将注释打开将会报错说在 `addStream` 未完成时无法添加其他 `data`。正确的使用方法应该是在 `Future` 后继续添加，或者使用 `async` 函数去添加。
 - `StreamController.close()`  
-发送一个 `done` 事件，并关闭该 `stream。`
+发送一个 `done` 事件，并关闭该 `stream。`  
 
 ---
 
@@ -414,7 +446,7 @@ Dart 中的流有两种，一种是单订阅流，一种是多播流。
 
 ### 5\. 取消 & 关闭（Cancel & Close）  
 #### 1). 取消
-当使用 listen() 方法对流进行监听时， 流会返回一个 StreamSubscription 对象，可以使用此对象的 cancel() 方法对流的监听进行取消。  
+当使用 `listen()` 方法对流进行监听时， 流会返回一个 `StreamSubscription` 对象，可以使用此对象的 `cancel()` 方法对流的监听进行取消。  
 而根据流种类的不同（单订阅流和多播流），取消的效果也不一样。
 - 单订阅流  
 > 当监听者取消监听时，流停止产生值，即使它依然可以产生更多的值。  
@@ -454,9 +486,7 @@ Dart 中的流有两种，一种是单订阅流，一种是多播流。
   streamCtrl = StreamController.broadcast(
     onCancel: () {
       print(streamCtrl.hasListener);
-      if (!streamCtrl.hasListener) {
-        streamCtrl.close();
-      }
+      streamCtrl.close();
     }
   );
   final lsn1 = streamCtrl.stream.listen((v) => print('lsn1: $v'));

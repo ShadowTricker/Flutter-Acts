@@ -2,7 +2,6 @@
 `Dart` 中的 `Future` 与 `Javascript` 中的 `Promise` 使用方法基本一致。  
 ### 1\. Future 的状态  
 Future 有两种状态：`Completed`， `Uncompleted`。  
-执行完毕之后，状态是固定的，无法改变。  
 当 `Future` 执行时，状态由 `Uncompleted => Completed`， 当状态变为 `Completed` 之后，`Future` 的状态就不会再改变了， 所以 `Future` 中的值在此之后无论何时都是一定的。  
 `Completed` 也有两种状态： `Completed(Value)`， `Completed(Error)`，此状态由 Future 执行异步函数时是否发生错误来确定。  
 > Javascript 中的 Promise 状态有三种，其实就是把 value 和 error 的状态拆分开，变为 pending（执行中），fulfilled（执行成功），reject（执行错误）。  
@@ -104,7 +103,7 @@ Dart 中支持了 `async/await` 关键字配合来以同步的形式写异步代
 **async 和 await 关键字需要配合使用。**  
 
 其实，单独在函数体前加上 `async` 关键字，而**函数体内部不使用 `await` 关键字**的话，函数是完全 **以同步的方式去运行** 的。  
-而如果 **内部使用了 `await` 关键字**，函数体执行时，`await` 关键字 **之前是同步执行**的， `await` 之后，就都属于 **异步执行**。函数体执行完毕后 `返回 Future<T>`， 即： `T => Future<T>`。
+而如果 **内部使用了 `await` 关键字**，函数体执行时，`await` 关键字 **之前是同步执行**的， `await` 之后，就都属于 **异步执行**。无论函数中是否有 `await` 关键字，函数体执行完毕后 `返回 Future<T>`， 即： `T => Future<T>`。
 如下例：  
 ```dart
     Future<void> withAwait() async {
@@ -179,6 +178,6 @@ Completer 是 Dart 中手动控制 Future 状态的方式，以此来决定执�
 上例中，两个方法分别被绑定到了两个按钮上。  
 当点击第一个按钮时，生成了一个 `Future`，同时为这个 `Future` 绑定了 `then` 方法。  
 如果不点击第二个按钮，那么这个 `Future` 它会一直处于 `Uncompleted` 状态。只有点击了按钮，这个 `Future` 才会改变状态。  
-本质其实是将 `Future` 的自主运行回调的时机变为了由自己操作执行时机。  
+本质其实是将 `Future` 的自主运行回调的时机变为了由自己操作执行时机。可以考虑成一个执行单次的事件控制器（`Controller`）。  
 
 ---
