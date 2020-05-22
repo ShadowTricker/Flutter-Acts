@@ -6,8 +6,8 @@ class SharedContextWidget extends InheritedWidget {
   final BuildContext originContext;
 
   SharedContextWidget({
-    @required this.child,
-    @required this.originContext
+    this.child,
+    this.originContext
   }): super(child: child);
 
   @override
